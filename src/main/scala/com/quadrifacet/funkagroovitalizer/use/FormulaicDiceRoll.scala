@@ -85,7 +85,20 @@ class ShuntingYard {
   }
 }
 
-abstract class Term
+class ReversePolishCalculator {
+  def calculate(terms: List[Term]): (Int, List[Term]) = {
+    doCalculation(terms) match {
+      case Nil => (0, Nil)
+      case calculated => (Integer.parseInt(calculated.headOption.getOrElse(Value("0")).repr), calculated.tail)
+    }
+  }
+
+  private def doCalculation(terms: List[Term]): List[Term] = {
+
+  }
+}
+
+abstract class Term {def repr: String}
 trait OperatorType {
   def operands: Int
   def precedence: Int
