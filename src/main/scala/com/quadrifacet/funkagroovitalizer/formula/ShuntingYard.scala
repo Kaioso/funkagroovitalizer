@@ -6,7 +6,9 @@ import scala.annotation.tailrec
   * Created by howl on 4/9/2016.
   */
 object ShuntingYard {
-  def tokenize(formula: String): List[Term] = {
+  def tokenize(formula: String): List[Term] = tokenize(formula, None)
+
+  def tokenize(formula: String, multiResultHandler: Option[(List[Int] => Unit)]): List[Term] = {
     val formulaMatcher = "((\\d+)|([+\\-*/de\\(\\)]))".r
     val matches = formulaMatcher findAllIn formula
     (for (_ <- matches) yield {
@@ -15,8 +17,8 @@ object ShuntingYard {
         case null :: "-" :: Nil => Minus
         case null :: "*" :: Nil => Multiply
         case null :: "/" :: Nil => Divide
-        case null :: "d" :: Nil => Dice
-//        case null :: "e" :: Nil => Operator("e", 3, 2)
+        case null :: "d" :: Nil => new Dice(multiResultHandler)
+        //        case null :: "e" :: Nil => Operator("e", 3, 2)
         case null :: "(" :: Nil => OpenParenthesis
         case null :: ")" :: Nil => CloseParenthesis
         case digit :: null :: Nil => new Value(digit.toInt)
@@ -48,17 +50,17 @@ class ShuntingYard {
   @tailrec
   private def popPrecedence(o1: Operator, operators: List[Term], output: List[Term]): (List[Term], List[Term]) = {
     operators.headOption match {
-      case Some(o2: Operator) if o1.precedence <= o2.precedence => popPrecedence(o1, operators.tail, o2 :: output)
       case None => (output, o1 :: Nil)
-      case _ => (output, o1 :: operators.tail)
+      case Some(o2: Operator) if o1.precedence <= o2.precedence => popPrecedence(o1, operators.tail, o2 :: output)
+      case _ => (output, o1 :: operators)
     }
   }
 
   @tailrec
   private def popParenthesis(operators: List[Term], output: List[Term]): (List[Term], List[Term]) = {
     operators.headOption match {
-      case Some(o: Operator) => popParenthesis(operators.tail, o :: output)
       case None => (output, Nil)
+      case Some(o: Operator) => popParenthesis(operators.tail, o :: output)
       case _ => (output, operators.tail)
     }
   }

@@ -14,9 +14,11 @@ object FormulaicDiceRoll {
 
 class FormulaicDiceRoll {
 //  val formula = "20+4-(9+18)/2 + (8+2)"
-  val formula = "5d1+5"
+  val formula = "5d1+(5+10-4)*10"
   def execute(): Int = {
-    val (result, extra) = new ReversePolishCalculator().calculate(new ShuntingYard().transform(ShuntingYard.tokenize(formula)))
+    val (result, extra) = new ReversePolishCalculator().calculate(
+      new ShuntingYard().transform(
+        ShuntingYard.tokenize(formula, Some(l => println(l.mkString(", "))))))
     result.value
   }
 }

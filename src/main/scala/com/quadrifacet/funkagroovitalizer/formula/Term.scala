@@ -7,7 +7,9 @@ import scala.util.Random
   */
 trait Term
 
-class Value(val value: Int) extends Term
+class Value(val value: Int) extends Term {
+  override def toString = value.toString
+}
 
 trait Operator extends Term {
   def operands: Int
@@ -30,9 +32,15 @@ trait BinaryOperator extends Operator {
 }
 
 object Plus extends BinaryOperator { override def f = _ + _ }
-object Minus extends BinaryOperator { override def f = _ - _ }
+object Minus extends BinaryOperator { override def f = (a, b) => b - a }
 object Multiply extends BinaryOperator { override def f = _ * _; override val precedence = 2 }
-object Divide extends BinaryOperator { override def f = _ / _; override val precedence = 2 }
-object Dice extends BinaryOperator {
-  override def f = (sides, times) => List.tabulate(times) { _ => new Random().nextInt(sides) + 1 }.sum
-  override val precedence = 3 }
+object Divide extends BinaryOperator { override def f = (a, b) => b / a; override val precedence = 2 }
+
+class Dice(val multiResultHandler: Option[(List[Int] => Unit)]) extends BinaryOperator {
+  override def f = (sides, times) => {
+    val results = List.tabulate(times) { _ => new Random().nextInt(sides) + 1 }
+    multiResultHandler foreach { h => h(results) }
+    results.sum
+  }
+  override val precedence = 3
+}
