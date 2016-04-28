@@ -1,5 +1,6 @@
 package com.quadrifacet.funkagroovitalizer.formula
 
+import scala.annotation.tailrec
 import scala.util.Random
 
 /**
@@ -42,5 +43,24 @@ class Dice(val multiResultHandler: Option[(List[Int] => Unit)]) extends BinaryOp
     multiResultHandler foreach { h => h(results) }
     results.sum
   }
+  override val precedence = 3
+}
+
+class Explode(val multiResultHandler: Option[(List[Int] => Unit)]) extends BinaryOperator {
+  override def f = (sides, times) => {
+    val results = roll(sides, times, Nil)
+    multiResultHandler foreach { h => h(results) }
+    results.sum
+  }
+
+  @tailrec
+  private def roll(sides: Int, times: Int, stack: List[Int]): List[Int] = {
+    val rolls = List.tabulate(times) { _ => new Random().nextInt(sides) + 1 }
+    rolls.count(i => i == sides) match {
+      case 0 => (rolls ++ stack).reverse
+      case n => roll(sides, n, rolls ++ stack)
+    }
+  }
+
   override val precedence = 3
 }
